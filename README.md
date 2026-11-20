@@ -1,57 +1,59 @@
-# OSY: Automatická registrace Debianu 13 do Zabbixu
+# Automatická registrace Debianu 13 do Zabbixu 8.0 LTS
 
-Tato varianta zadání nasazuje virtuální server s **Debianem 13** (Trixie) a moderním agentem **Zabbix Agent 2 (verze 8.0 LTS)** instalovaným z oficiálního repozitáře Zabbix. Vagrant po spuštění automaticky provede instalaci i konfiguraci agenta. Agent se připojuje k serveru `enceladus.pfsense.cz` a pro automatickou registraci odesílá `HostMetadata=SPOS`.
+Školní projekt do předmětu **OSY**. Cílem je automaticky rozjet virtuální server s **Debianem 13** pomocí Vagrantu, nainstalovat na něj **Zabbix Agent 2 (8.0 LTS)** a propojit ho se Zabbix serverem `enceladus.pfsense.cz` přes funkci Auto-registration.
 
-## Spuštění
+---
 
-```sh
-vagrant validate
+## Jak to funguje
+
+Celé nasazení je plně automatizované přes Vagrant provisioning:
+
+1. **Vytvoření VM (`Vagrantfile`)** – spustí virtuální stroj s Debianem 13 a předá mu instalační a konfigurační skripty.
+2. **Instalace agenta (`zabzab-agent-install.sh`)** – přidá oficiální repozitář Zabbix 8.0 pro Debian 13 a nainstaluje balíček `zabbix-agent2`.
+3. **Konfigurace a registrace (`zabzab-agent-conf.sh`)** – nastaví stálý jedinečný `Hostname` (přežije restart i opakovaný provisioning), nasměruje agenta na `enceladus.pfsense.cz` s metadaty `HostMetadata=SPOS` a spustí službu.
+
+---
+
+## Rychlé spuštění
+
+```bash
+git clone https://github.com
+cd joyik08-osy-2026-zbx8-auto-reg
 vagrant up
 ```
 
-Po úpravě skriptů lze konfiguraci i instalaci znovu aplikovat příkazem `vagrant provision`. Jedinečný název hosta se ukládá uvnitř VM (např. do `/etc/zabbix/spos-hostname` *(uprav podle cesty ve tvém skriptu)*), takže zůstává stejný i po restartu virtuálního stroje nebo opakovaném spuštění provisioningu. Nová VM vytvořená po `vagrant destroy` získá nový název.
+*(Pokud upravíš skripty a chceš změny aplikovat znovu bez mazání VM, použij `vagrant provision`.)*
 
-Instalační skript nejprve stáhne a nainstaluje balíček oficiálního repozitáře Zabbix 8.0 pro Debian 13 (`zabbix-release`), aktualizuje seznam balíčků (`apt-get update`) a nainstaluje `zabbix-agent2`. Následný konfigurační skript upraví parametry v `/etc/zabbix/zabbix_agent2.conf` (`Server`, `ServerActive`, `HostMetadata` a `Hostname`), povolí službu po startu systému a restartuje ji.
+---
 
-Pokud by bylo potřeba spustit samotnou konfiguraci ručně uvnitř VM jako `root`:
+## Kontrola ve virtuálním stroji
 
-```sh
-bash /vagrant/zabzab-agent-conf.sh
-systemctl status zabbix-agent2
+Po připojení přes `vagrant ssh` si můžeš ověřit, že vše běží tak, jak má:
+
+```bash
+zabbix_agent2 -V              # kontrola verze 8.0
+systemctl status zabbix-agent2 # kontrola běžící služby
 ```
 
-## Ověření
+---
 
-Po spuštění VM lze stav agenta a síťové spojení ověřit přímo přes `vagrant ssh`:
+## Výsledek v Zabbixu
 
-```sh
-vagrant ssh
-zabbix_agent2 -V
-systemctl status zabbix-agent2
-grep -E '^(Hostname|Server|ServerActive|HostMetadata)=' /etc/zabbix/zabbix_agent2.conf
-getent hosts enceladus.pfsense.cz
-nc -zv -w 5 enceladus.pfsense.cz 10051
-ss -tlpn | grep 10050
-```
+Po spuštění agenta se server sám přihlásil do Zabbixu, zařadil se do příslušné skupiny a získal Linux šablonu:
 
-V Zabbixu se automaticky zaregistroval host `vorisek_matyas-f3076748` do příslušné skupiny a přiřadila se mu šablona pro monitoring Linuxu přes Zabbix Agent 2:
+![Registrace hosta v Zabbixu](Images/zbx8_vorisek_host.png)
 
-![Host Debian 13 v Zabbixu se skupinou a šablonou](Images/zbx8_vorisek_host.png)
+A zde už jsou vidět reálná monitorovací data přicházející z virtuálního stroje:
 
-Přehled naměřených dat (Latest data / grafy) téhož hosta potvrzuje aktivní příjem metrik ze systému (vytížení CPU, paměť, diskový prostor apod.):
+![Monitorovací data v Zabbixu](Images/zbx8_vorisek_monitoring.png)
 
-![Naměřené hodnoty hosta Debian 13 v Zabbixu](Images/zbx8_vorisek_monitoring.png)
+---
 
-## Soubory
+## Přehled souborů
 
-- `Vagrantfile`: definice virtuálního stroje s Debianem 13 a automatické spuštění provisioning skriptů.
-- `zabzab-agent-install.sh`: přidání oficiálního repozitáře Zabbix 8.0 LTS pro Debian 13 a instalace balíčku `zabbix-agent2`.
-- `zabzab-agent-conf.sh`: zajištění stálého jedinečného názvu hosta, konfigurace `/etc/zabbix/zabbix_agent2.conf` a restart služby `zabbix-agent2`.
-- `Images/zbx8_vorisek_host.png`: snímek zaregistrovaného hosta z webového rozhraní Zabbixu.
-- `Images/zbx8_vorisek_monitoring.png`: snímek z webového rozhraní Zabbixu dokazující příjem monitorovacích dat.
-
-## Zdroje
-
-- [Zabbix 8.0: instalace z oficiálních balíčků](https://zabbix.com)
-- [Zabbix 8.0: parametry konfigurace agenta 2](https://zabbix.com)
-- [Zabbix 8.0: automatická registrace aktivního agenta](https://zabbix.com)
+| Soubor / Složka | Popis |
+| :--- | :--- |
+| `Vagrantfile` | Konfigurace virtuálního stroje (Debian 13) a spuštění provisioningu |
+| `zabzab-agent-install.sh` | Instalace Zabbix Agent 2 z oficiálního repozitáře |
+| `zabzab-agent-conf.sh` | Nastavení `/etc/zabbix/zabbix_agent2.conf` a restart agenta |
+| `Images/` | Screenshoty potvrzující registraci a funkční monitoring |
