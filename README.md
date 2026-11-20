@@ -1,5 +1,8 @@
 # Automatická registrace Debianu 13 do Zabbixu 8.0 LTS
 
+![Jensen](Images/zbx8_jensen.png)
+
+
 Školní projekt do předmětu **OSY**. Cílem je automaticky rozjet virtuální server s **Debianem 13** pomocí Vagrantu, nainstalovat na něj **Zabbix Agent 2 (8.0 LTS)** a propojit ho se Zabbix serverem `enceladus.pfsense.cz` přes funkci Auto-registration.
 
 ---
@@ -34,6 +37,12 @@ Po připojení přes `vagrant ssh` si můžeš ověřit, že vše běží tak, j
 zabbix_agent2 -V              # kontrola verze 8.0
 systemctl status zabbix-agent2 # kontrola běžící služby
 ```
+
+---
+
+## MOJE VĚTA
+
+Všechno bylo za mě jednoduchý a dost rychlý protože práci kterou jsme měli dělat jsem si dělal už před asi 3 týdnama.
 
 ---
 
