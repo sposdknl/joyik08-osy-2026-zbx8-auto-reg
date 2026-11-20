@@ -66,3 +66,7 @@ A zde už jsou vidět reálná monitorovací data přicházející z virtuální
 | `zabzab-agent-install.sh` | Instalace Zabbix Agent 2 z oficiálního repozitáře |
 | `zabzab-agent-conf.sh` | Nastavení `/etc/zabbix/zabbix_agent2.conf` a restart agenta |
 | `Images/` | Screenshoty potvrzující registraci a funkční monitoring |
+
+---
+
+![Jensen_and_spy](Images/zbx8_jensen_spy.png)
