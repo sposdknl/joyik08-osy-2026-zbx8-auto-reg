@@ -34,7 +34,7 @@ nc -zv -w 5 enceladus.pfsense.cz 10051
 ss -tlpn | grep 10050
 ```
 
-V Zabbixu se automaticky zaregistroval host `<tvůj-název-hosta>` do příslušné skupiny a přiřadila se mu šablona pro monitoring Linuxu přes Zabbix Agent 2:
+V Zabbixu se automaticky zaregistroval host `vorisek_matyas-f3076748` do příslušné skupiny a přiřadila se mu šablona pro monitoring Linuxu přes Zabbix Agent 2:
 
 ![Host Debian 13 v Zabbixu se skupinou a šablonou](Images/zbx8_vorisek_host.png)
 
